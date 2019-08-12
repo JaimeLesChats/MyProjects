@@ -1,0 +1,182 @@
+from Classes.Players import Player
+from Classes.Players import Boss
+import time
+from random import *
+
+#Fonction des combats
+
+def fight():
+    global stage
+    #Si le joueur a plus de vitesse que le boss, il commence le combat
+    if player.get_speed() > boss.get_speed():
+        #tant que tout le monde a de la vie
+       while player.get_health() >0 and boss.get_health() > 0:
+            #attaque sur le boss
+            is_crit = randint(1, 100)
+            crit_dmg = randint(player.get_attack() + 1, player.get_attack() * 2)
+            player.attack_boss(boss, is_crit, crit_dmg)
+            #affiche l'attaque
+            if is_crit < player.get_crit():
+                print('{} subit {} dégats ! il lui reste {} points de vie'.format(boss.get_name(), crit_dmg, boss.get_health()))
+            else:
+                print('{} subit {} dégats ! il lui reste {} points de vie'.format(boss.get_name(), player.get_attack(), boss.get_health()))
+
+            #si apres le coup le boss n'est pas mort, il attaque
+            if boss.get_health() > 0:
+                #attaque sur le joueur
+                boss.attack_player(player)
+                #affiche l'attaque
+                print('Vous avez subi {} dégats ! il vous reste {} points de vie'.format(boss.get_attack(), player.get_health()))
+
+            #si au moins une personne a plus de PV, on arrete le combat
+            else:
+                break
+
+            time.sleep(0.5)
+
+    else:
+        #le boss commence le combat, tant que personne est mort
+        while player.get_health() > 0 or boss.get_health() > 0:
+            #attaque du boss sur le joueur
+            boss.attack_player(player)
+            # on affiche l'attaque
+            print('Vous avez subi {} dégats ! il vous reste {} points de vie'.format(boss.get_attack(), player.get_health()))
+
+            # Si le joueur n'est toujours pas mort, alors il attaque
+            if player.get_health() > 0 :
+                is_crit = randint(1, 100)
+                crit_dmg = randint(player.get_attack() + 1, player.get_attack() * 2)
+                # attaque du joueur sur le boss
+                player.attack_boss(boss, is_crit, crit_dmg)
+                # on affiche l'attaque
+                if is_crit < player.crit:
+                    print('{} subit {} dégats ! il lui reste {} points de vie'.format(boss.get_name(), crit_dmg, boss.get_health()))
+                else:
+                    print('{} subit {} dégats ! il lui reste {} points de vie'.format(boss.get_name(), player.get_attack(), boss.get_health()))
+
+            # si finalement le joueur etait mort, on arrete le combat
+            else:
+                break
+
+            time.sleep(0.5)
+
+    # si c'est le boss qui meurt
+    if boss.get_health() <= 0:
+        # le joueur gagne le combat
+        player.won_battle()
+
+        #on augmente la difficultée
+        player.stage_pass()
+
+        #on augmente l'xp du joueur
+        player.level_up(player.get_stage() * 3 + player.get_stage())
+
+
+
+
+    #si c'est le joueur qui meurt
+    elif player.get_health() <= 0:
+        # le joueur a perdu
+        player.lost_battle()
+        if player.get_lives() == 0:
+            player.start()
+
+
+#MainLoop
+
+#on met le stage a 1 et on initialise le joueur et la boucle de jeu
+stage = 1
+player = Player(
+                "Matt", #name
+                20, #health_max
+                20, #health
+                3,  #attack
+                4, #speed
+                1, #xp
+                1, #level
+                3, #lives
+                5, #crit
+                5000) #money
+
+run = True
+#debut de la boucle
+while run == True:
+    #on affiche le menu
+    menu = ["Voulez vous :", "- Jouer ( j )", "- Afficher vos stats ( s )", "- Acceder au Magasin ( m )","- Quitter ( q )"]
+    for s in menu:
+        print(s)
+    menu1 = input("")
+
+
+    # si on veut regarder les stats
+    if menu1 == "s":
+        #on affiche les stats
+        stats = [player.get_money(), player.get_max_health(), player.get_attack(), player.get_crit(), player.get_level(), player.get_speed(), player.get_lives(), player.get_stage()]
+        stats_names = ["Money : ", "PVs : ", "Attack : ", "Crit : ", "Level : ", "Vitesse : ", "Vies : ", "Stage : "]
+        stats_count = 0
+        for s in stats:
+            print(stats_names[stats_count], s)
+            stats_count +=1
+            time.sleep(0.5)
+
+        time.sleep(2)
+
+
+    # si le joueur veut quitter
+    if menu1 == "q":
+        #on arrete la boucle
+        run = False
+
+    # si le joueur veut acceder au magasin
+    if menu1 == "m":
+        magasin = ["1) Coup Crit + : 20 $", "2) Next Stage : 100 $"]
+        for m in magasin:
+            print(m)
+        magasin1 = input("").split(" ")
+
+        if magasin1[0] == "1":
+            if player.buy(20, int(magasin1[1])) == True:
+                player.market(1, int(magasin1[1]))
+
+        if magasin1[0] == "2":
+            if player.buy(100, int(magasin1[1])) == True:
+                for a in range(0, int(magasin1[1])):
+                    player.stage_pass()
+
+    # si le joueur veut jouer
+    if menu1 == "j":
+        #on initialise le boss
+        if player.get_stage() == 1:
+            boss = Boss("DIDIER", 50, 1, 2)
+        elif player.get_stage() == 2:
+            boss = Boss("FRANCIS", 130, 2, 2)
+        elif player.get_stage() == 3:
+            boss = Boss("JEAN MICHEL", 270, 3, 3)
+        elif player.get_stage() == 4:
+            boss = Boss("BRUNO", 390, 3, 3)
+        elif player.get_stage() == 5:
+            boss = Boss("ROBERT", 510, 7, 3)
+        elif player.get_stage() == 6:
+            boss = Boss("MARVICK",620, 4, 4)
+        elif player.get_stage()== 7:
+            boss = Boss("LEON", 1360, 2, 3)
+        elif player.get_stage() == 8:
+            boss = Boss("BERNARD", 780, 12, 5)
+        else:
+            continue
+
+
+        # on montre au joueur le boss qu il va affronter
+        print("Vous etes au stage {}, vous allez vous battre contre {}, un Boss avec {} point(s) de vie et {} point(s) d'attaque".format(player.get_stage(), boss.get_name(), boss.get_health(), boss.get_attack() ))
+        time.sleep(5)
+        # on commence le combat
+        fight()
+
+
+    #ChEaT cOdEs
+        if menu1 == "cheat123":
+            player.level_up(100)
+            
+            
+#boucle finie, le programme s arrete on affiche un message gentil :)
+print("Merci d'avoir joué !")
