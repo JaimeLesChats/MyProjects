@@ -179,3 +179,214 @@ while run == True:
 				
 #boucle finie, le programme s arrete on affiche un message gentil :)
 print("Merci d'avoir joué !")
+
+
+
+
+
+
+
+#__________________________________________________________________________________
+
+
+
+from math import *
+import time
+from random import *
+
+#classe du joueur
+class Player:
+
+    def __init__(self, name, health, max_health, attack, speed, xp, level, lives, crit, money):
+        self.name = name
+        self.health = health
+        self.attack = attack
+        self.xp = xp
+        self.level = level
+        self.speed = speed
+        self.lives = lives
+        self.max_health = max_health
+        self.crit = crit
+        self.money = money
+        self.stage = 1
+
+    #Fonctions des propriétés du joueur
+
+    def get_name(self):
+        return self.name
+
+    def get_health(self):
+        return self.health
+
+    def get_attack(self):
+        return self.attack
+    def get_xp(self):
+        return self.xp
+
+    def get_level(self):
+        return self.level
+
+    def get_speed(self):
+        return self.speed
+
+    def get_lives(self):
+        return self.lives
+
+    def get_max_health(self):
+        return self.max_health
+
+    def get_crit(self):
+        return self.crit
+
+    def get_money(self):
+        return self.money
+
+    def get_stage(self):
+        return self.stage
+
+
+    #Autres fonctions ____________________
+
+
+    def start(self):
+        self.max_health = 20
+        self.health = 20
+        self.attack = 3
+        self.speed = 4
+        self.xp = 1
+        self.level = 1
+        self.lives = 3
+        self.crit = 5
+        self.money = 10
+        self.stage = 1
+
+    # fonction pour recevoir des degats, a ne pas appeler, fonctionne avec attack_player() du Boss
+    def damage(self, damage):
+        self.health -= damage
+
+
+    #fonction a appeler pour attaquer le boss
+    def attack_boss(self, boss, is_crit, crit_dmg):
+        if is_crit <= self.crit:
+            damage = crit_dmg
+            print("Vous avez fait un coup critique !")
+        else:
+            damage = self.attack
+        boss.damage(damage)
+
+    #fonction qui augmente l'xp de joueur + fait passer de level si jamais en augmentant les stats
+    def level_up(self, xp_gained): #Fonctionne
+        # xp a atteindre pour le niveau suivant
+        xp_pass = round(self.level * 1.5 + self.level, 1)
+
+        #si le joueur a plus d'xp que xp a atteindre, il monte d'un niveau
+        if  self.xp + xp_gained >= xp_pass:
+            #boucle si jamais il monte de plusieurs niveaux
+            while self.xp + xp_gained >= xp_pass:
+                # augmente le niveau
+                self.level += 1
+                #augmente les stats
+                self.max_health += 4 + self.level
+                self.attack += 1 + self.level
+                # pour ne pas avoir + de 100% de crit
+                self.crit += 3
+                if self.crit >100:
+                    self.crit = 100
+
+                # on lui donne l'xp supplementaire
+                self.xp = self.xp + xp_gained - xp_pass
+                xp_gained = 0
+                # on change l'xp a atteindre
+                xp_pass = round(self.level * 1.5 + self.level, 1)
+                #on affiche au joueur qu'il vient de monter d'un niveau
+                print("Level Up ! You are now level {} with {} xp !".format(self.level, self.xp))
+                time.sleep(1)
+
+        # si le joueur ne monte pas de niveau en gagnant de l'xp
+        else:
+            # on lui ajoute simplement l'xp qu il vient de gagner
+            self.xp += xp_gained
+
+    #permet de voir si un objet est achetable ou non
+    def buy(self, price, quantity):
+        if self.money  > price * quantity:
+            self.money -= price * quantity
+            return True
+        else:
+            print("Vous n'avez pas assez d'argent !")
+            time.sleep(1)
+            return False
+
+    #ajoute au joueur l'item acheté au market
+    def market(self, item, quantity):
+        if item == 1:
+            self.crit += 10 * quantity
+
+        print("Vous avez bien acheté votre Item !")
+        time.sleep(1)
+
+    def stage_pass(self):
+        self.stage += 1
+
+
+    # fonction a appeler quand le joueur perd le combat
+    def lost_battle(self): # pas fini
+        # le joueur perd une vie
+        self.lives -= 1
+
+        #si il lui reste des vies
+        if self.lives != 0:
+            print("Vous avez perdu le combat, il vous reste encore {} vies !".format(self.lives))
+            #on remet ses points de vie
+            self.health = self.max_health
+
+        #si il n'a plus de vies
+        else:
+            print("Vous avez perdu le combat, il ne vous reste plus de vies... Vous allez recommencer la partie !")
+        time.sleep(2)
+
+
+    #fonction a appeler quand le joueur gagne le combat
+    def won_battle(self):
+        self.health = self.max_health
+        # message de victoire
+        print("Vous avez gagné le combat ! Vous remportez {} xp !".format(self.stage * 3 + self.stage))
+        self.money += self.level * 2 + self.stage
+        print("Vous venez de gagner {} $ !".format(self.level * 2 + self.stage))
+
+
+
+# Classe du boss
+class Boss:
+    def __init__(self, name, health, attack, speed):
+        self.health = health
+        self.attack = attack
+        self.name = name
+        self.speed = speed
+
+    #Fonctions des propriétés du boss
+
+    def get_name(self):
+        return self.name
+
+    def get_health(self):
+        return self.health
+
+    def get_attack(self):
+        return self.attack
+
+    def get_speed(self):
+        return self.speed
+
+    #Autres fonctions
+
+    #fonction de degats sur le boss qui marche avec attack_boss, ne s'appelle pas
+    def damage(self, damage):
+        self.health -= damage
+
+    #fonction pour infliger des degats au joueur, qui s'appelle
+    def attack_player(self,player):
+        damage = self.attack
+        player.damage(damage)
+	
+	
