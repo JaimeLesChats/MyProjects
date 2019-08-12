@@ -174,9 +174,8 @@ while run == True:
 
 
     #ChEaT cOdEs
-        if menu1 == "cheat123":
-            player.level_up(100)
-            
-            
+    if menu1 == "cheat123":
+        player.level_up(100)
+				
 #boucle finie, le programme s arrete on affiche un message gentil :)
 print("Merci d'avoir joué !")
